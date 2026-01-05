@@ -1,0 +1,64 @@
+2026-01-04 19:27:06,769 - INFO - 
+==================================================
+2026-01-04 19:27:06,769 - INFO - 🚀 Daily Brief Agent v1.0 Starting
+2026-01-04 19:27:06,769 - INFO - ==================================================
+
+2026-01-04 19:27:06,770 - INFO - Output directory ready: /Users/taxman/Code/daily-brief-agent/output
+2026-01-04 19:27:06,775 - INFO - HTTP Request: GET http://127.0.0.1:11434/api/tags "HTTP/1.1 200 OK"
+2026-01-04 19:27:06,776 - INFO - ✓ Ollama is running
+2026-01-04 19:27:06,776 - INFO - HTTP Request: GET http://127.0.0.1:11434/api/tags "HTTP/1.1 200 OK"
+2026-01-04 19:27:06,777 - ERROR - Error checking models: 'name'
+2026-01-04 19:27:06,777 - WARNING - Model 'deepseek-coder-v2:16b' not available. Trying fallback...
+2026-01-04 19:27:06,777 - INFO - HTTP Request: GET http://127.0.0.1:11434/api/tags "HTTP/1.1 200 OK"
+2026-01-04 19:27:06,778 - ERROR - No models available. Please install one with: ollama pull <model-name>
+2026-01-04 19:30:39,144 - INFO - 
+==================================================
+2026-01-04 19:30:39,144 - INFO - 🚀 Daily Brief Agent v1.0 Starting
+2026-01-04 19:30:39,144 - INFO - ==================================================
+
+2026-01-04 19:30:39,146 - INFO - Output directory ready: /Users/taxman/Code/daily-brief-agent/output
+2026-01-04 19:30:39,150 - INFO - HTTP Request: GET http://127.0.0.1:11434/api/tags "HTTP/1.1 200 OK"
+2026-01-04 19:30:39,151 - INFO - ✓ Ollama is running
+2026-01-04 19:30:39,151 - INFO - HTTP Request: GET http://127.0.0.1:11434/api/tags "HTTP/1.1 200 OK"
+2026-01-04 19:30:39,152 - INFO - ✓ Model 'deepseek-coder-v2:16b' is available
+2026-01-04 19:30:39,152 - INFO - 📡 Fetching: Hacker News...
+2026-01-04 19:30:41,347 - INFO -   ✓ Got 5 articles
+2026-01-04 19:30:41,347 - INFO - 📡 Fetching: OpenAI Blog...
+2026-01-04 19:30:44,629 - INFO -   ✓ Got 5 articles
+2026-01-04 19:30:44,630 - INFO - 📡 Fetching: Anthropic Blog...
+2026-01-04 19:30:46,215 - WARNING -   ⚠️  Feed parsing warning for Anthropic Blog
+2026-01-04 19:30:46,215 - INFO -   ✓ Got 0 articles
+2026-01-04 19:30:46,215 - INFO - 📡 Fetching: TechCrunch AI...
+2026-01-04 19:30:47,432 - INFO -   ✓ Got 5 articles
+2026-01-04 19:30:47,432 - INFO - 📡 Fetching: The Verge AI...
+2026-01-04 19:30:48,424 - INFO -   ✓ Got 5 articles
+2026-01-04 19:30:48,424 - INFO - 
+📰 Total articles fetched: 20
+2026-01-04 19:30:48,424 - INFO - 📰 Unique articles: 20
+2026-01-04 19:30:48,425 - INFO -   ℹ️  Filtered out 10 old articles (>48h)
+2026-01-04 19:30:48,425 - INFO - 📰 Recent articles: 10
+
+2026-01-04 19:30:48,426 - INFO -   ℹ️  Saved 10 articles to cache
+2026-01-04 19:30:48,426 - INFO - Summarizing 10 articles...
+
+2026-01-04 19:30:48,426 - INFO - 🤖 Summarizing with AI...
+
+2026-01-04 19:31:14,374 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-01-04 19:31:14,379 - INFO - ✓ Summary generated
+
+2026-01-04 19:31:14,379 - INFO - 
+==================================================
+2026-01-04 19:31:14,379 - INFO - === AI SUMMARY ===
+2026-01-04 19:31:14,380 - INFO - ==================================================
+
+2026-01-04 19:31:14,380 - INFO - 
+==================================================
+
+2026-01-04 19:31:14,381 - INFO - ✓ Markdown saved to: /Users/taxman/Code/daily-brief-agent/output/brief_2026-01-04.md
+2026-01-04 19:31:14,382 - INFO - ✓ JSON saved to: /Users/taxman/Code/daily-brief-agent/output/brief_2026-01-04.json
+2026-01-04 19:31:14,382 - INFO - 
+✅ Daily brief generated successfully!
+2026-01-04 19:31:14,382 - INFO - 📄 Markdown: /Users/taxman/Code/daily-brief-agent/output/brief_2026-01-04.md
+2026-01-04 19:31:14,382 - INFO - 📊 JSON: /Users/taxman/Code/daily-brief-agent/output/brief_2026-01-04.json
+2026-01-04 19:31:14,382 - INFO - 📝 Log: /Users/taxman/Code/daily-brief-agent/output/brief.log
+

@@ -1,0 +1,30 @@
+feeds:
+  # AI News
+  - name: "Hacker News"
+    url: "https://hnrss.org/newest?q=AI+OR+GPT+OR+LLM"
+    category: "News"
+  
+  - name: "OpenAI Blog"
+    url: "https://openai.com/blog/rss.xml"
+    category: "News"
+  
+  - name: "Anthropic Blog"  
+    url: "https://www.anthropic.com/news/rss.xml"
+    category: "News"
+  
+  # Tech News
+  - name: "TechCrunch AI"
+    url: "https://techcrunch.com/tag/artificial-intelligence/feed/"
+    category: "News"
+  
+  - name: "The Verge AI"
+    url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
+    category: "News"
+
+settings:
+  max_articles_per_feed: 5
+  max_articles_to_summarize: 20  # Max articles to send to LLM
+  filter_hours: 48  # Only include articles from last N hours
+  summary_model: "deepseek-coder-v2:16b"  # Will fallback to any available model if not found
+
+  
