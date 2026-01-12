@@ -11,6 +11,7 @@ import json
 import logging
 import asyncio
 import aiohttp
+import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -397,6 +398,28 @@ def save_to_json(articles: List[Dict], summary: str) -> Path:
     return output_file
 
 
+def sync_to_vault(files: List[Path], config: Dict) -> None:
+    """Copy output files to Obsidian vault if enabled"""
+    vault_config = config.get('settings', {}).get('vault_sync', {})
+
+    if not vault_config.get('enabled', False):
+        return
+
+    vault_path = vault_config.get('vault_path')
+    if not vault_path:
+        logger.warning("Vault sync enabled but no vault_path configured")
+        return
+
+    vault_path = Path(vault_path)
+    vault_path.mkdir(parents=True, exist_ok=True)
+
+    for source_path in files:
+        if source_path and source_path.exists():
+            dest_path = vault_path / source_path.name
+            shutil.copy2(source_path, dest_path)
+            logger.info(f"📁 Synced to Obsidian: {dest_path}")
+
+
 def get_fallback_model() -> Optional[str]:
     """Get first available model as fallback"""
     try:
@@ -467,7 +490,10 @@ def main():
     # Save outputs
     md_file = save_to_markdown(summary, articles, config)
     json_file = save_to_json(articles, summary)
-    
+
+    # Sync to Obsidian vault
+    sync_to_vault([md_file, json_file], config)
+
     logger.info("\n✅ Daily brief generated successfully!")
     logger.info(f"📄 Markdown: {md_file}")
     logger.info(f"📊 JSON: {json_file}")

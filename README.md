@@ -1,8 +1,8 @@
-# Daily Brief Agent
+# Personal Briefing System
 
 Automated AI/tech news aggregator. Pulls from RSS feeds, summarizes with local LLM, outputs Markdown. Replaces 4+ hours of manual news reading with a 10-minute brief.
 
-## Status: v1.0 Shipped ✅
+## Status: v1.0 Shipped
 
 Production-ready system generating daily briefs.
 
@@ -36,8 +36,8 @@ Production-ready system generating daily briefs.
 
 ## Setup
 ```bash
-git clone https://github.com/taxman-dev/daily-brief-agent.git
-cd daily-brief-agent
+git clone https://github.com/covalent-dev/personal-briefing-system.git
+cd personal-briefing-system
 
 # Create virtual environment
 python3 -m venv .venv
@@ -112,9 +112,9 @@ settings:
 
 ## Project Structure
 ```
-daily-brief-agent/
+personal-briefing-system/
 ├── src/
-│   └── brief.py          # Main script (400+ lines)
+│   └── brief.py          # Main script
 ├── config/
 │   └── feeds.yaml        # RSS feed configuration
 ├── output/

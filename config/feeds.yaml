@@ -27,4 +27,9 @@ settings:
   filter_hours: 48  # Only include articles from last N hours
   summary_model: "deepseek-coder-v2:16b"  # Will fallback to any available model if not found
 
+  # Obsidian vault sync
+  vault_sync:
+    enabled: true
+    vault_path: "/Users/taxman/Taxman_Progression_v4/05_Knowledge_Base/Daily-Briefs"
+
   
