@@ -222,6 +222,16 @@ def save_cache(articles: List[Dict]) -> None:
         logger.warning(f"  ⚠️  Could not save cache: {e}")
 
 
+def should_fetch_feed(feed_config: Dict) -> bool:
+    """Check if feed should be fetched based on day filter"""
+    days_filter = feed_config.get('days')
+    if not days_filter:
+        return True  # No filter = fetch every day
+
+    today = datetime.now().strftime('%A').lower()  # e.g., 'sunday'
+    return today in [d.lower() for d in days_filter]
+
+
 def fetch_all_articles(config: Dict, use_cache: bool = True) -> List[Dict]:
     """Fetch from all configured feeds"""
     # Check cache first
@@ -232,11 +242,14 @@ def fetch_all_articles(config: Dict, use_cache: bool = True) -> List[Dict]:
             if datetime.now() - cache_time < timedelta(hours=1):
                 logger.info("✓ Using cached articles (less than 1 hour old)")
                 return cache['articles']
-    
+
     all_articles = []
     max_per_feed = config['settings']['max_articles_per_feed']
-    
+
     for feed_config in config['feeds']:
+        if not should_fetch_feed(feed_config):
+            logger.info(f"⏭️  Skipping {feed_config['name']} (not scheduled for today)")
+            continue
         articles = fetch_articles(feed_config, max_per_feed)
         all_articles.extend(articles)
     
@@ -297,22 +310,27 @@ def summarize_articles(articles: List[Dict], model: str) -> str:
         articles_text += f"   - Link: {article['link']}\n"
         articles_text += f"   - Preview: {truncate_text(article['summary'], 300)}\n"
     
-    prompt = f"""You are a tech news curator creating a daily brief. Below are today's articles from various tech/AI sources.
+    today = datetime.now().strftime("%B %d, %Y")
+
+    prompt = f"""You are a tech news curator creating a daily brief for {today}.
+
+IMPORTANT RULES:
+- Each article should appear ONLY ONCE in your summary
+- Do NOT repeat or duplicate any article
+- Be concise - 1-2 sentences per article maximum
 
 Your task:
-1. Create a well-organized summary using proper Markdown formatting
-2. Group articles by theme or importance
-3. For significant articles, explain:
-   - What happened (1-2 sentences)
-   - Why it matters
-4. Use markdown headers (##), bullet points, and **bold** for emphasis
-5. Be concise and actionable
-6. Include article links where relevant
+1. Group articles by theme (AI/ML, Tech Industry, Ethics, etc.)
+2. For each article, briefly explain what happened and why it matters
+3. Use markdown headers (##) and bullet points
+4. Include the article link for each item
+
+There are exactly {len(ranked_articles)} articles below. Your summary should cover each one ONCE.
 
 Articles:
 {articles_text}
 
-Format your response as clean Markdown with clear sections.
+Format as clean Markdown. Remember: NO DUPLICATES.
 """
     
     # Call Ollama

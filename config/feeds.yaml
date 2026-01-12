@@ -1,35 +1,55 @@
 feeds:
-  # AI News
+  # AI/Tech News (Daily)
   - name: "Hacker News"
     url: "https://hnrss.org/newest?q=AI+OR+GPT+OR+LLM"
-    category: "News"
-  
+    category: "Tech"
+
   - name: "OpenAI Blog"
     url: "https://openai.com/blog/rss.xml"
-    category: "News"
-  
-  - name: "Anthropic Blog"  
+    category: "Tech"
+
+  - name: "Anthropic Blog"
     url: "https://www.anthropic.com/news/rss.xml"
-    category: "News"
-  
-  # Tech News
+    category: "Tech"
+
   - name: "TechCrunch AI"
     url: "https://techcrunch.com/tag/artificial-intelligence/feed/"
-    category: "News"
-  
+    category: "Tech"
+
   - name: "The Verge AI"
     url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
-    category: "News"
+    category: "Tech"
+
+  # US/World Politics (Daily)
+  - name: "Reuters World"
+    url: "https://www.reutersagency.com/feed/?best-regions=north-america&post_type=best"
+    category: "Politics"
+
+  - name: "AP News Politics"
+    url: "https://rsshub.app/apnews/topics/politics"
+    category: "Politics"
+
+  - name: "NPR Politics"
+    url: "https://feeds.npr.org/1014/rss.xml"
+    category: "Politics"
+
+  # AI Tools & Products (Sunday only)
+  - name: "Product Hunt AI"
+    url: "https://www.producthunt.com/feed?category=artificial-intelligence"
+    category: "AI Tools"
+    days: ["sunday"]
+
+  - name: "There's An AI For That"
+    url: "https://theresanaiforthat.com/rss/"
+    category: "AI Tools"
+    days: ["sunday"]
 
 settings:
   max_articles_per_feed: 5
-  max_articles_to_summarize: 20  # Max articles to send to LLM
-  filter_hours: 48  # Only include articles from last N hours
-  summary_model: "deepseek-coder-v2:16b"  # Will fallback to any available model if not found
+  max_articles_to_summarize: 20
+  filter_hours: 48
+  summary_model: "deepseek-coder-v2:16b"
 
-  # Obsidian vault sync
   vault_sync:
     enabled: true
     vault_path: "/Users/taxman/Taxman_Progression_v4/05_Knowledge_Base/Daily-Briefs"
-
-  
