@@ -2,9 +2,9 @@
 
 Automated AI/tech news aggregator. Pulls from RSS feeds, summarizes with local LLM, outputs Markdown. Replaces 4+ hours of manual news reading with a 10-minute brief.
 
-## Status: v1.0 Shipped
+## Status: v1.1 Shipped
 
-Production-ready system generating daily briefs.
+Production-ready system generating daily briefs with scheduling.
 
 ## What It Does
 
@@ -16,7 +16,7 @@ Production-ready system generating daily briefs.
 
 ## Features
 
-**v1.0 includes:**
+**v1.1 includes:**
 - RSS aggregation (5 sources: Hacker News, OpenAI, Anthropic, TechCrunch, The Verge)
 - Article deduplication (removes 10-30% duplicates)
 - Date filtering (only last 48 hours)
@@ -25,6 +25,10 @@ Production-ready system generating daily briefs.
 - Markdown + JSON export
 - 1-hour caching (avoids re-fetching)
 - Comprehensive logging
+- Prompt template (`prompts/brief.md`)
+- Modular codebase (fetch/summarize/output/utils)
+- Scheduled runs via launchd
+- Basic sanity tests
 
 ## Tech Stack
 
@@ -36,8 +40,8 @@ Production-ready system generating daily briefs.
 
 ## Setup
 ```bash
-git clone https://github.com/covalent-dev/personal-briefing-system.git
-cd personal-briefing-system
+git clone https://github.com/covalent-dev/daily-brief-agent.git
+cd daily-brief-agent
 
 # Create virtual environment
 python3 -m venv .venv
@@ -142,19 +146,25 @@ python3 -m unittest tests/test_utils.py
 6. **Export:** Markdown (readable) + JSON (machine-readable)
 7. **Cache:** Saves articles for 1 hour (avoids re-fetching)
 
-## Roadmap
-
-**Week 2:** YouTube module (auto-summarize AI channel videos)  
-**Week 3:** Reddit module (top posts from r/LocalLLaMA, r/MachineLearning)  
-**Week 4:** Deploy to Fly.io (runs automatically at 6am daily)
-
 ## Project Structure
 ```
-personal-briefing-system/
+daily-brief-agent/
 ├── src/
-│   └── brief.py          # Main script
+│   ├── brief.py          # Orchestrator
+│   ├── config.py         # Config + output dir
+│   ├── fetch.py          # RSS fetch + cache
+│   ├── summarize.py      # LLM prompt + summarize
+│   ├── output_writer.py  # Markdown/JSON output
+│   └── utils.py          # Shared helpers
 ├── config/
 │   └── feeds.yaml        # RSS feed configuration
+├── prompts/
+│   └── brief.md          # Prompt template
+├── scripts/
+│   ├── run_daily_brief.sh
+│   └── com.covalent.daily-brief.plist
+├── tests/
+│   └── test_utils.py
 ├── output/
 │   ├── brief_YYYY-MM-DD.md
 │   ├── brief_YYYY-MM-DD.json
