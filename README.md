@@ -82,6 +82,17 @@ tail -n 50 /Users/taxman/covalent-dev/daily-brief-agent/output/launchd.log
 
 This runs every day at 6:00 AM local time. Edit the plist to change the schedule.
 
+## Email Notification (Gmail + Keychain)
+
+Store credentials in Keychain:
+```bash
+security add-generic-password -a "$USER" -s daily-brief-gmail-user -w "YOUR_GMAIL_ADDRESS"
+security add-generic-password -a "$USER" -s daily-brief-gmail-pass -w "APP_PASSWORD"
+security add-generic-password -a "$USER" -s daily-brief-email-to -w "YOUR_TO_ADDRESS"
+```
+
+The runner calls `scripts/notify_email.py` after the brief is generated.
+
 ## Configuration
 
 Edit `config/feeds.yaml` to add/remove sources:

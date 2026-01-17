@@ -14,3 +14,4 @@ fi
 cd "$PROJECT_ROOT"
 "$HOME/.local/bin/dailybrief" --create-only
 "$PYTHON_BIN" src/brief.py >> "$PROJECT_ROOT/output/launchd.log" 2>&1
+"$PYTHON_BIN" scripts/notify_email.py >> "$PROJECT_ROOT/output/launchd.log" 2>&1
