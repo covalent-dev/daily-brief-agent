@@ -116,6 +116,13 @@ settings:
   Preview text...
 ```
 
+## Documentation
+
+High-level docs live in `docs/`:
+- Overview, architecture, configuration, prompting
+- Output specs, operations, troubleshooting
+- Changelog
+
 ## Tests
 
 Run basic sanity checks:
