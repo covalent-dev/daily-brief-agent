@@ -68,13 +68,13 @@ def main() -> None:
     articles = fetch_all_articles(config, CACHE_FILE, use_cache=True)
     if not articles:
         logger.warning("No articles to summarize")
-        return
+        summary = "No articles fetched. Feeds may be empty or temporarily unavailable."
+    else:
+        max_articles = config['settings'].get('max_articles_to_summarize', 20)
+        articles_to_summarize = articles[:max_articles]
 
-    max_articles = config['settings'].get('max_articles_to_summarize', 20)
-    articles_to_summarize = articles[:max_articles]
-
-    logger.info(f"Summarizing {len(articles_to_summarize)} articles...\n")
-    summary = summarize_articles(articles_to_summarize, model_name, PROMPT_FILE)
+        logger.info(f"Summarizing {len(articles_to_summarize)} articles...\n")
+        summary = summarize_articles(articles_to_summarize, model_name, PROMPT_FILE)
 
     logger.info("\n" + "=" * 50)
     logger.info("=== AI SUMMARY ===")
