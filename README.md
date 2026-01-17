@@ -54,6 +54,30 @@ ollama pull deepseek-coder-v2:16b
 python3 src/brief.py
 ```
 
+## Scheduled Run (macOS launchd)
+
+1. Make the runner executable:
+```bash
+chmod +x /Users/taxman/covalent-dev/daily-brief-agent/scripts/run_daily_brief.sh
+```
+
+2. Copy the launchd plist:
+```bash
+cp /Users/taxman/covalent-dev/daily-brief-agent/scripts/com.covalent.daily-brief.plist ~/Library/LaunchAgents/
+```
+
+3. Load the job:
+```bash
+launchctl load ~/Library/LaunchAgents/com.covalent.daily-brief.plist
+```
+
+4. Check logs:
+```bash
+tail -n 50 /Users/taxman/covalent-dev/daily-brief-agent/output/launchd.log
+```
+
+This runs every day at 6:00 AM local time. Edit the plist to change the schedule.
+
 ## Configuration
 
 Edit `config/feeds.yaml` to add/remove sources:
@@ -149,4 +173,3 @@ personal-briefing-system/
 See `output/brief_2026-01-05.md` for real output.
 
 ---
-
