@@ -116,6 +116,13 @@ settings:
   Preview text...
 ```
 
+## Tests
+
+Run basic sanity checks:
+```bash
+python3 -m unittest tests/test_utils.py
+```
+
 **`brief_YYYY-MM-DD.json`** (raw data for further processing)
 
 ## How It Works
