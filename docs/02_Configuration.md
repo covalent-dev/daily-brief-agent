@@ -23,4 +23,7 @@ settings:
 ```
 
 ## Scheduling
-See `scripts/com.covalent.daily-brief.plist` for launchd config.
+See `scripts/com.covalent.daily-brief.plist` for launchd config. The runner:
+- Skips before 05:00 local time
+- Exits if today’s brief already exists
+- Defers when offline and retries on the next interval

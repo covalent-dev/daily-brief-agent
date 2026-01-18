@@ -80,7 +80,7 @@ launchctl load ~/Library/LaunchAgents/com.covalent.daily-brief.plist
 tail -n 50 /Users/taxman/covalent-dev/daily-brief-agent/output/launchd.log
 ```
 
-This runs every day at 6:00 AM local time. Edit the plist to change the schedule.
+This runs daily at 5:00 AM local time and also checks every 30 minutes while the Mac is awake to retry if the network was down. The runner skips before 05:00 and exits if today’s brief already exists.
 
 ## Email Notification (Gmail + Keychain)
 

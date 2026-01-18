@@ -16,6 +16,8 @@
       <key>Minute</key>
       <integer>0</integer>
     </dict>
+    <key>StartInterval</key>
+    <integer>1800</integer>
     <key>StandardOutPath</key>
     <string>/Users/taxman/covalent-dev/daily-brief-agent/output/launchd.log</string>
     <key>StandardErrorPath</key>
