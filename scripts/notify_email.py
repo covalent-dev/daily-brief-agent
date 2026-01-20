@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import socket
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -86,6 +87,12 @@ def main() -> None:
     msg["To"] = to_addr
     msg["Subject"] = subject
     msg.set_content("\n".join(lines))
+
+    try:
+        socket.getaddrinfo("smtp.gmail.com", 587)
+    except OSError:
+        print("Network/DNS unavailable; skipping email notification")
+        return
 
     with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
         smtp.starttls()

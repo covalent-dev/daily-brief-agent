@@ -1,5 +1,6 @@
 import json
 import logging
+import socket
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List
@@ -19,7 +20,11 @@ def fetch_articles(feed_config: Dict, max_articles: int = 5) -> List[Dict]:
         feed = feedparser.parse(feed_config['url'])
 
         if feed.bozo:
-            logger.warning(f"  ⚠️  Feed parsing warning for {feed_config['name']}")
+            bozo_error = getattr(feed, "bozo_exception", None)
+            if bozo_error:
+                logger.warning(f"  ⚠️  Feed parsing warning for {feed_config['name']}: {bozo_error}")
+            else:
+                logger.warning(f"  ⚠️  Feed parsing warning for {feed_config['name']}")
 
         articles = []
         for entry in feed.entries[:max_articles]:
@@ -82,15 +87,34 @@ def should_fetch_feed(feed_config: Dict) -> bool:
     return today in [d.lower() for d in days_filter]
 
 
+def has_network_dns() -> bool:
+    """Return True if DNS resolution works."""
+    try:
+        socket.getaddrinfo("example.com", 80)
+        return True
+    except OSError:
+        return False
+
+
 def fetch_all_articles(config: Dict, cache_file: Path, use_cache: bool = True) -> List[Dict]:
     """Fetch from all configured feeds."""
+    cache = None
     if use_cache:
         cache = load_cache(cache_file)
         if cache.get('timestamp'):
             cache_time = datetime.fromisoformat(cache['timestamp'])
             if datetime.now() - cache_time < timedelta(hours=1):
-                logger.info("✓ Using cached articles (less than 1 hour old)")
-                return cache['articles']
+                if cache.get('articles'):
+                    logger.info("✓ Using cached articles (less than 1 hour old)")
+                    return cache['articles']
+                logger.info("⚠️  Cache is fresh but empty; refetching feeds")
+
+    if not has_network_dns():
+        logger.error("❌ Network/DNS unavailable; skipping feed fetch")
+        if cache and cache.get('articles'):
+            logger.info("⚠️  Using cached articles despite stale timestamp")
+            return cache['articles']
+        return []
 
     all_articles = []
     max_per_feed = config['settings']['max_articles_per_feed']
