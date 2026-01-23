@@ -6,6 +6,14 @@ Automated AI/tech news aggregator. Pulls from RSS feeds, summarizes with local L
 
 Production-ready system generating daily briefs with scheduling.
 
+**Month 1 checklist (Tech Progression v3):**
+- ✅ Local LLM summarizer + RSS ingestion
+- ✅ Configurable topics + categories
+- ✅ Markdown output to Obsidian
+- ✅ Scheduled runs (launchd)
+- ✅ Optional email notification
+- ⏳ Live deploy (planned after domain/portfolio launch)
+
 ## What It Does
 
 **Problem:** Staying updated on AI/tech requires watching YouTube, scrolling Reddit, reading dozens of blogs (4-6 hours/day).
@@ -82,6 +90,8 @@ tail -n 50 /Users/taxman/covalent-dev/daily-brief-agent/output/launchd.log
 
 This runs daily at 5:00 AM local time and also checks every 30 minutes while the Mac is awake to retry if the network was down. The runner skips before 05:00 and exits if today’s brief already exists.
 
+**Note:** `scripts/run_daily_brief.sh` calls an optional helper at `$HOME/.local/bin/dailybrief`. If you don’t have it installed, remove that line or replace it with your own pre-run hook.
+
 ## Email Notification (Gmail + Keychain)
 
 Store credentials in Keychain:
@@ -107,7 +117,12 @@ settings:
   max_articles_to_summarize: 20
   filter_hours: 48
   summary_model: "deepseek-coder-v2:16b"
+  vault_sync:
+    enabled: true
+    vault_path: "/Users/taxman/Taxman_Progression_v4/05_Knowledge_Base/Daily-Briefs"
 ```
+
+**Topic coverage:** Add feeds for job market, crypto, or personal interests by inserting additional entries under `feeds:` and setting an appropriate `category`.
 
 ## Output
 
