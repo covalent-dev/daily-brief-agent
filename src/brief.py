@@ -7,17 +7,19 @@ Reads RSS feeds, summarizes with local LLM, outputs Markdown/JSON
 import logging
 import os
 import shutil
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from config import load_config, ensure_output_dir
-from fetch import fetch_all_articles
+from fetch import fetch_all_articles_with_meta
 from summarize import (
     check_ollama,
     check_model_exists,
     get_fallback_model,
     summarize_articles
 )
-from output_writer import save_to_markdown, save_to_json, sync_to_vault
+from output_writer import save_failure_markdown, save_to_markdown, save_to_json, sync_to_vault
 
 # Paths
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -67,6 +69,7 @@ def run_daily_brief() -> dict:
         logger.error(f"Failed to load config: {e}")
         return {"ok": False, "error": "config_load_failed"}
 
+    settings = config.get("settings", {}) or {}
     provider = (os.getenv("DAILYBRIEF_LLM_PROVIDER") or "").strip().lower()
     if not provider:
         provider = "groq" if os.getenv("GROQ_API_KEY") else "ollama"
@@ -89,7 +92,33 @@ def run_daily_brief() -> dict:
                 logger.error("No models available. Please install one with: ollama pull <model-name>")
                 return {"ok": False, "error": "ollama_model_missing"}
 
-    articles = fetch_all_articles(config, cache_file, use_cache=True)
+    retry_attempts = int(settings.get("network_retry_attempts", 3))
+    retry_backoff_s = int(settings.get("network_retry_backoff_seconds", 30))
+
+    articles = []
+    fetch_meta = {}
+    for attempt in range(1, max(1, retry_attempts) + 1):
+        articles, fetch_meta = fetch_all_articles_with_meta(config, cache_file, use_cache=True)
+        if articles or fetch_meta.get("network_ok") is not False:
+            break
+        if attempt < retry_attempts:
+            logger.warning("Network unavailable; retrying in %ss (attempt %d/%d)", retry_backoff_s, attempt, retry_attempts)
+            time.sleep(max(1, retry_backoff_s))
+
+    if not articles and fetch_meta.get("status") == "network_unavailable":
+        reason = "Network/DNS unavailable. Last good brief preserved; will retry on the next run."
+        md_failed = save_failure_markdown(output_dir, reason=reason, config=config, meta=fetch_meta)
+        if not _bool_env("DAILYBRIEF_DISABLE_VAULT_SYNC", default=False):
+            sync_to_vault([md_failed], config)
+        return {
+            "ok": False,
+            "error": "network_unavailable",
+            "markdown": str(md_failed),
+            "article_count": 0,
+            "provider": provider,
+            "model": model_name,
+        }
+
     if not articles:
         logger.warning("No articles to summarize")
         summary = "No articles fetched. Feeds may be empty or temporarily unavailable."
@@ -106,12 +135,12 @@ def run_daily_brief() -> dict:
     print(summary)
     logger.info("\n" + "=" * 50 + "\n")
 
-    md_file = save_to_markdown(output_dir, summary, articles, config)
+    md_file = save_to_markdown(output_dir, summary, articles, config, meta=fetch_meta)
     json_file = save_to_json(output_dir, articles, summary)
     if not _bool_env("DAILYBRIEF_DISABLE_VAULT_SYNC", default=False):
         sync_to_vault([md_file, json_file], config)
 
-    # Convenience copies for API access
+    # Convenience copies for API access (only after a non-failure run)
     try:
         latest_md = output_dir / "latest.md"
         latest_json = output_dir / "latest.json"
@@ -132,6 +161,9 @@ def run_daily_brief() -> dict:
         "article_count": len(articles),
         "provider": provider,
         "model": model_name,
+        "cache_used": bool(fetch_meta.get("cache_used")),
+        "cache_cached_at": fetch_meta.get("cache_cached_at"),
+        "network_ok": fetch_meta.get("network_ok"),
     }
 
 

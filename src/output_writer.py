@@ -3,49 +3,111 @@ import logging
 import os
 import shutil
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
-from utils import truncate_text
+from utils import parse_date, truncate_text
 
 logger = logging.getLogger(__name__)
 
 
-def save_to_markdown(output_dir: Path, summary: str, articles: List[Dict], config: Dict) -> Path:
-    """Save summary and articles to markdown file."""
-    timestamp = datetime.now()
+def _format_published(published: str) -> str:
+    dt = parse_date(published)
+    if not dt:
+        return published or "Unknown date"
+    try:
+        dt_utc = dt.astimezone(timezone.utc)
+    except Exception:
+        dt_utc = dt
+    return dt_utc.strftime("%Y-%m-%d %H:%M UTC")
+
+
+def _as_callout(title: str, body: str, callout_type: str = "summary") -> str:
+    body = (body or "").strip()
+    if not body:
+        body = "_No summary generated._"
+    lines = body.splitlines() or [body]
+    rendered = [f"> [!{callout_type}] {title}"]
+    for line in lines:
+        rendered.append("> " + line.rstrip())
+    return "\n".join(rendered)
+
+
+def save_to_markdown(output_dir: Path, summary: str, articles: List[Dict], config: Dict, meta: Dict | None = None) -> Path:
+    """Save summary and articles to Obsidian-friendly markdown."""
+    meta = meta or {}
+    timestamp = datetime.now(timezone.utc)
     date_str = timestamp.strftime("%Y-%m-%d")
-    time_str = timestamp.strftime("%H:%M:%S")
     output_file = output_dir / f"brief_{date_str}.md"
 
+    model = (config.get("settings", {}) or {}).get("summary_model", "unknown")
+    cached_at = meta.get("cache_cached_at")
+    cache_age_s = meta.get("cache_age_seconds")
+    cache_used = bool(meta.get("cache_used"))
+    network_ok = meta.get("network_ok")
+
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(f"# 📰 Daily Tech Brief\n\n")
-        f.write(f"**Date**: {date_str}  \n")
-        f.write(f"**Generated**: {time_str}  \n")
-        f.write(f"**Total Articles**: {len(articles)}  \n")
-        f.write(f"**Model**: {config['settings']['summary_model']}\n\n")
+        # YAML frontmatter (Obsidian)
+        f.write("---\n")
+        f.write(f"date: {date_str}\n")
+        f.write("type: daily-brief\n")
+        f.write(f"generated_at: {timestamp.isoformat()}\n")
+        f.write(f"article_count: {len(articles)}\n")
+        f.write(f"model: {model}\n")
+        if network_ok is not None:
+            f.write(f"network_ok: {str(bool(network_ok)).lower()}\n")
+        fetch_started_at = meta.get("fetch_started_at")
+        fetch_finished_at = meta.get("fetch_finished_at")
+        if fetch_started_at or fetch_finished_at:
+            f.write("fetch:\n")
+            if fetch_started_at:
+                f.write(f"  started_at: {fetch_started_at}\n")
+            if fetch_finished_at:
+                f.write(f"  finished_at: {fetch_finished_at}\n")
+        f.write("cache:\n")
+        f.write(f"  used: {str(cache_used).lower()}\n")
+        if cached_at:
+            f.write(f"  cached_at: {cached_at}\n")
+        if cache_age_s is not None:
+            f.write(f"  age_minutes: {int(cache_age_s // 60)}\n")
+        f.write("tags:\n")
+        f.write("  - daily-brief\n")
+        f.write("  - tech\n")
         f.write("---\n\n")
 
-        f.write("## 🤖 AI Summary\n\n")
-        f.write(summary)
-        f.write("\n\n---\n\n")
-
-        f.write("## 📋 All Articles\n\n")
+        f.write(f"# Daily Brief — {date_str}\n\n")
+        f.write(_as_callout("AI Summary", summary, callout_type="summary"))
+        f.write("\n\n## All Articles\n\n")
 
         by_category = defaultdict(list)
         for article in articles:
-            by_category[article['category']].append(article)
+            by_category[article.get('category', 'General')].append(article)
 
-        for category, cat_articles in by_category.items():
+        def _sort_key(a: Dict):
+            dt = parse_date(a.get("published", ""))
+            return dt or datetime.min.replace(tzinfo=timezone.utc)
+
+        for category in sorted(by_category.keys(), key=lambda s: s.lower()):
+            cat_articles = sorted(by_category[category], key=_sort_key, reverse=True)
             f.write(f"### {category}\n\n")
             for article in cat_articles:
-                f.write(f"- **[{article['title']}]({article['link']})**  \n")
-                f.write(f"  *{article['source']}* - {article['published']}  \n")
-                f.write(f"  {truncate_text(article['summary'], 150)}\n\n")
+                title = (article.get("title") or "No title").strip()
+                link = (article.get("link") or "").strip()
+                source = (article.get("source") or "").strip()
+                published = _format_published(article.get("published", ""))
+                snippet = truncate_text(article.get("summary", ""), 180)
 
-        f.write("---\n\n")
-        f.write(f"*Generated by Daily Brief Agent on {timestamp.strftime('%Y-%m-%d at %H:%M:%S')}*\n")
+                if link:
+                    f.write(f"- **[{title}]({link})** — {source} · {published}\n")
+                else:
+                    f.write(f"- **{title}** — {source} · {published}\n")
+                if snippet:
+                    f.write(f"  - {snippet}\n")
+            f.write("\n")
+
+        f.write("---\n")
+        f.write(f"_Generated by Daily Brief Agent on {timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}_\n")
 
     logger.info(f"✓ Markdown saved to: {output_file}")
     return output_file
@@ -63,8 +125,10 @@ def save_to_json(output_dir: Path, articles: List[Dict], summary: str) -> Path:
         'articles': articles
     }
 
-    with open(output_file, 'w', encoding='utf-8') as f:
+    tmp = output_file.with_suffix(".json.tmp")
+    with open(tmp, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+    tmp.replace(output_file)
 
     logger.info(f"✓ JSON saved to: {output_file}")
     return output_file
@@ -86,10 +150,47 @@ def sync_to_vault(files: List[Path], config: Dict) -> None:
         return
 
     vault_path = Path(vault_path)
-    vault_path.mkdir(parents=True, exist_ok=True)
+    try:
+        vault_path.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        logger.warning("Vault sync failed creating path %s: %s", vault_path, e)
+        return
 
     for source_path in files:
-        if source_path and source_path.exists():
-            dest_path = vault_path / source_path.name
+        if not source_path or not source_path.exists():
+            continue
+        dest_path = vault_path / source_path.name
+        try:
             shutil.copy2(source_path, dest_path)
             logger.info(f"📁 Synced to Obsidian: {dest_path}")
+        except Exception as e:
+            logger.warning("Vault sync failed copying %s -> %s: %s", source_path, dest_path, e)
+
+
+def save_failure_markdown(output_dir: Path, reason: str, config: Dict, meta: Dict | None = None) -> Path:
+    """Create a placeholder brief when fetching fails. Does not touch latest.*."""
+    meta = meta or {}
+    timestamp = datetime.now(timezone.utc)
+    date_str = timestamp.strftime("%Y-%m-%d")
+    output_file = output_dir / f"brief_{date_str}_FAILED.md"
+
+    model = (config.get("settings", {}) or {}).get("summary_model", "unknown")
+
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write("---\n")
+        f.write(f"date: {date_str}\n")
+        f.write("type: daily-brief\n")
+        f.write("status: failed\n")
+        f.write(f"generated_at: {timestamp.isoformat()}\n")
+        f.write(f"model: {model}\n")
+        f.write("tags:\n")
+        f.write("  - daily-brief\n")
+        f.write("  - failed\n")
+        f.write("---\n\n")
+        f.write(f"# Daily Brief — {date_str} (Failed)\n\n")
+        f.write(_as_callout("Fetch failed", reason, callout_type="warning"))
+        f.write("\n\n---\n")
+        f.write(f"_Generated by Daily Brief Agent on {timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}_\n")
+
+    logger.info("✓ Failure placeholder saved to: %s", output_file)
+    return output_file
