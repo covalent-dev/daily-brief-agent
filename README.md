@@ -200,6 +200,57 @@ daily-brief-agent/
 └── README.md
 ```
 
+## Fly.io Deployment (Cloud)
+
+This repo includes a Fly.io deployment that runs the brief on startup and then daily on a schedule.
+
+### What runs on Fly
+- A small FastAPI service (for health + manual triggers)
+- A built-in scheduler loop (runs daily at the configured time)
+- Output persisted on a Fly Volume at `/data/output`
+
+### One-time setup
+```bash
+brew install flyctl
+fly auth login
+
+cd daily-brief-agent
+fly apps create daily-brief-agent
+fly volumes create dailybrief_data --region ord --size 1 --app daily-brief-agent --yes
+```
+
+### Configure secrets (required)
+The cloud deployment uses Groq (local Ollama cannot be used on Fly).
+
+```bash
+fly secrets set GROQ_API_KEY=... DAILYBRIEF_ACCESS_TOKEN=... --app daily-brief-agent
+```
+
+### Deploy
+```bash
+fly deploy --app daily-brief-agent
+```
+
+### Endpoints
+- `GET /health` (no auth) — used by Fly health checks
+- `POST /run` (auth optional) — trigger a run immediately
+- `GET /latest` (auth optional) — returns `latest.md` as plain text
+
+If `DAILYBRIEF_ACCESS_TOKEN` is set, include:
+```bash
+curl -H "X-Dailybrief-Token: $DAILYBRIEF_ACCESS_TOKEN" https://daily-brief-agent.fly.dev/latest
+```
+
+### Scheduling
+Set schedule via env vars (configured in `fly.toml` by default):
+- `DAILYBRIEF_TZ` (example: `America/Chicago`)
+- `DAILYBRIEF_RUN_HHMM` (example: `07:00`)
+- `DAILYBRIEF_SCHEDULE_ENABLED` (`true`/`false`)
+
+Notes:
+- The Fly app is configured to keep 1 machine running so the scheduler can fire.
+- Vault sync is disabled on Fly via `DAILYBRIEF_DISABLE_VAULT_SYNC=true`.
+
 ## Performance
 
 **Day 1 execution:**

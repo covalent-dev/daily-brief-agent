@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import shutil
 from collections import defaultdict
 from datetime import datetime
@@ -71,6 +72,9 @@ def save_to_json(output_dir: Path, articles: List[Dict], summary: str) -> Path:
 
 def sync_to_vault(files: List[Path], config: Dict) -> None:
     """Copy output files to Obsidian vault if enabled."""
+    if os.getenv("DAILYBRIEF_DISABLE_VAULT_SYNC", "").strip().lower() in {"1", "true", "yes", "y", "on"}:
+        return
+
     vault_config = config.get('settings', {}).get('vault_sync', {})
 
     if not vault_config.get('enabled', False):

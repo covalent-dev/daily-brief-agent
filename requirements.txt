@@ -5,6 +5,7 @@ annotated-types==0.7.0
 anyio==4.12.0
 attrs==25.4.0
 certifi==2026.1.4
+fastapi==0.115.8
 feedparser==6.0.12
 frozenlist==1.8.0
 h11==0.16.0
@@ -20,4 +21,5 @@ PyYAML==6.0.3
 sgmllib3k==1.0.0
 typing-inspection==0.4.2
 typing_extensions==4.15.0
+uvicorn==0.30.6
 yarl==1.22.0

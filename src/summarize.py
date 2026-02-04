@@ -1,8 +1,10 @@
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import httpx
 import ollama
 
 from utils import is_recent, truncate_text
@@ -135,6 +137,13 @@ def summarize_articles(articles: List[Dict], model: str, prompt_file: Path) -> s
     template = load_prompt_template(prompt_file)
     prompt = build_prompt(template, ranked_articles)
 
+    provider = (os.getenv("DAILYBRIEF_LLM_PROVIDER") or "").strip().lower()
+    if not provider:
+        provider = "groq" if os.getenv("GROQ_API_KEY") else "ollama"
+
+    if provider == "groq":
+        return _summarize_with_groq(prompt, model)
+
     try:
         response = ollama.chat(
             model=model,
@@ -150,3 +159,30 @@ def summarize_articles(articles: List[Dict], model: str, prompt_file: Path) -> s
     except Exception as e:
         logger.error(f"✗ Error calling LLM: {e}")
         return "Error generating summary. Please check if the model is available."
+
+
+def _summarize_with_groq(prompt: str, model: str) -> str:
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        return "Error generating summary: GROQ_API_KEY not configured."
+
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.2,
+    }
+
+    try:
+        with httpx.Client(timeout=60) as client:
+            resp = client.post(url, headers=headers, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+        summary = data["choices"][0]["message"]["content"]
+        validate_summary(summary)
+        logger.info("✓ Summary generated (Groq)\n")
+        return summary
+    except Exception as e:
+        logger.error(f"✗ Error calling Groq: {e}")
+        return "Error generating summary. Please check Groq credentials/model."

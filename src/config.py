@@ -21,5 +21,5 @@ def load_config(config_file: Path) -> Dict:
 
 def ensure_output_dir(output_dir: Path) -> None:
     """Create output directory if it doesn't exist."""
-    output_dir.mkdir(exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
     logger.info(f"Output directory ready: {output_dir}")
