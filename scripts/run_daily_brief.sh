@@ -34,8 +34,12 @@ if (( 10#${hour} < MIN_HOUR )); then
   exit 0
 fi
 
+# Always create daily note first (before checking if brief exists)
+# This ensures daily note gets created even if VPS already synced the brief via Syncthing
+"$HOME/.local/bin/dailybrief" --create-only
+
 if [[ -s "$output_md" || -s "$vault_md" ]]; then
-  log "Brief already exists for ${today}, skipping" >> "$PROJECT_ROOT/output/launchd.log"
+  log "Brief already exists for ${today}, skipping brief generation" >> "$PROJECT_ROOT/output/launchd.log"
   exit 0
 fi
 
@@ -43,7 +47,5 @@ if ! is_reachable "www.apple.com"; then
   log "Network not reachable; will retry later" >> "$PROJECT_ROOT/output/launchd.log"
   exit 0
 fi
-
-"$HOME/.local/bin/dailybrief" --create-only
 "$PYTHON_BIN" src/brief.py >> "$PROJECT_ROOT/output/launchd.log" 2>&1
 "$PYTHON_BIN" scripts/notify_email.py >> "$PROJECT_ROOT/output/launchd.log" 2>&1
