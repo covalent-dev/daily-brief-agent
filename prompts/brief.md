@@ -6,6 +6,9 @@ NON-NEGOTIABLE RULES:
 - Each article appears at most once (no duplicates).
 - Be insightful: explain "why it matters" in plain English.
 - Use only "-" for bullets (no "*" bullets).
+- Scope is tech, AI, developer tools, startups, chips/cloud/cybersecurity, and the tech job market.
+- Exclude generic politics. Only include government/policy/DC items when they materially affect AI, software, chips, cybersecurity, privacy/data regulation, cloud infrastructure, tech companies, startups, or tech labor.
+- Do not summarize generic politician/bill/election stories just because they are current.
 
 REQUIRED OUTPUT STRUCTURE (use exactly these section headers, in this order):
 

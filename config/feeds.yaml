@@ -8,8 +8,8 @@ feeds:
     url: "https://openai.com/blog/rss.xml"
     category: "Tech"
 
-  - name: "Anthropic Blog"
-    url: "https://www.anthropic.com/news/rss.xml"
+  - name: "Microsoft AI Blog"
+    url: "https://blogs.microsoft.com/ai/feed/"
     category: "Tech"
 
   - name: "TechCrunch AI"
@@ -20,18 +20,18 @@ feeds:
     url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
     category: "Tech"
 
-  # US/World Politics (Daily)
-  - name: "Reuters World"
-    url: "https://www.reutersagency.com/feed/?best-regions=north-america&post_type=best"
-    category: "Politics"
+  # Tech job market / industry signal (Daily)
+  - name: "Hacker News Jobs"
+    url: "https://hnrss.org/newest?q=hiring+OR+layoffs+OR+jobs+OR+recruiting+OR+engineer"
+    category: "Tech Jobs"
 
-  - name: "AP News Politics"
-    url: "https://rsshub.app/apnews/topics/politics"
-    category: "Politics"
+  - name: "TechCrunch Startups"
+    url: "https://techcrunch.com/category/startups/feed/"
+    category: "Tech"
 
-  - name: "NPR Politics"
-    url: "https://feeds.npr.org/1014/rss.xml"
-    category: "Politics"
+  - name: "The Pragmatic Engineer"
+    url: "https://blog.pragmaticengineer.com/rss/"
+    category: "Tech Jobs"
 
   # AI Tools & Products (Sunday only)
   - name: "Product Hunt AI"
@@ -39,9 +39,9 @@ feeds:
     category: "AI Tools"
     days: ["sunday"]
 
-  - name: "There's An AI For That"
-    url: "https://theresanaiforthat.com/rss/"
-    category: "AI Tools"
+  - name: "GitHub Blog AI"
+    url: "https://github.blog/tag/ai/feed/"
+    category: "Developer Tools"
     days: ["sunday"]
 
 settings:

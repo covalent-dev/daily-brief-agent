@@ -9,6 +9,117 @@ _SCRIPT_STYLE_RE = re.compile(r"(?is)<(script|style)[^>]*>.*?</\1>")
 _TAG_RE = re.compile(r"(?s)<[^>]+>")
 _WS_RE = re.compile(r"\s+")
 
+TECH_CATEGORY_ALLOWLIST = {
+    "ai tools",
+    "developer tools",
+    "jobs",
+    "tech",
+    "tech jobs",
+}
+
+TECH_RELEVANCE_TERMS = {
+    "ai",
+    "agent",
+    "agents",
+    "algorithm",
+    "android",
+    "anthropic",
+    "api",
+    "app",
+    "apple",
+    "automation",
+    "aws",
+    "azure",
+    "chip",
+    "chips",
+    "cloud",
+    "code",
+    "coding",
+    "compute",
+    "cybersecurity",
+    "data center",
+    "data centers",
+    "developer",
+    "developers",
+    "devops",
+    "engineer",
+    "engineering",
+    "gpu",
+    "gpus",
+    "google",
+    "hiring",
+    "job market",
+    "jobs",
+    "layoff",
+    "layoffs",
+    "linux",
+    "llm",
+    "machine learning",
+    "meta",
+    "microsoft",
+    "model",
+    "models",
+    "nvidia",
+    "open source",
+    "openai",
+    "privacy",
+    "programmer",
+    "programming",
+    "recruiting",
+    "robot",
+    "robotics",
+    "saas",
+    "security",
+    "semiconductor",
+    "software",
+    "startup",
+    "startups",
+    "tech",
+    "technology",
+    "tooling",
+    "vc",
+    "venture",
+}
+
+POLITICS_TERMS = {
+    "administration",
+    "ballot",
+    "bill",
+    "campaign",
+    "capitol",
+    "congress",
+    "dc",
+    "democrat",
+    "democrats",
+    "election",
+    "governor",
+    "lawmakers",
+    "legislation",
+    "parliament",
+    "politician",
+    "politicians",
+    "president",
+    "republican",
+    "republicans",
+    "senate",
+    "senator",
+    "supreme court",
+    "trump",
+    "washington",
+    "white house",
+}
+
+TECH_POLICY_TERMS = {
+    "chip export",
+    "chips act",
+    "cybersecurity",
+    "data privacy",
+    "data protection",
+    "export control",
+    "export controls",
+    "privacy",
+}
+
 
 def clean_html(text: Optional[str]) -> str:
     """Remove HTML tags and decode entities from text."""
@@ -107,3 +218,46 @@ def deduplicate_articles(articles: List[Dict]) -> List[Dict]:
 def filter_recent_articles(articles: List[Dict], hours: int = 48) -> List[Dict]:
     """Filter articles to only recent ones."""
     return [a for a in articles if is_recent(a, hours)]
+
+
+def _article_content_text(article: Dict) -> str:
+    parts = [
+        article.get("title", ""),
+        article.get("summary", ""),
+    ]
+    return " ".join(str(part) for part in parts if part).lower()
+
+
+def _contains_any(text: str, terms: set[str]) -> bool:
+    for term in terms:
+        escaped = re.escape(term.lower())
+        pattern = rf"(?<![a-z0-9]){escaped}(?![a-z0-9])"
+        if re.search(pattern, text):
+            return True
+    return False
+
+
+def is_relevant_article(article: Dict) -> bool:
+    """Keep only tech/AI/tech-job-market articles.
+
+    Generic politics is excluded. Politics/policy survives only when the
+    article is directly connected to AI, tech companies, chips, software,
+    cybersecurity, privacy/data regulation, cloud, startups, or tech labor.
+    """
+    text = _article_content_text(article)
+    category = str(article.get("category", "")).strip().lower()
+
+    has_tech = _contains_any(text, TECH_RELEVANCE_TERMS)
+    has_politics = _contains_any(text, POLITICS_TERMS)
+    has_tech_policy = _contains_any(text, TECH_POLICY_TERMS)
+    is_allowed_category = category in TECH_CATEGORY_ALLOWLIST
+
+    if has_politics:
+        return has_tech or has_tech_policy
+
+    return has_tech or is_allowed_category
+
+
+def filter_relevant_articles(articles: List[Dict]) -> List[Dict]:
+    """Filter articles down to tech/AI/tech-job-market relevance."""
+    return [article for article in articles if is_relevant_article(article)]

@@ -10,6 +10,8 @@ from utils import (
     clean_html,
     clean_summary_text,
     deduplicate_articles,
+    filter_relevant_articles,
+    is_relevant_article,
     is_recent,
     parse_date,
     truncate_text,
@@ -62,6 +64,49 @@ class UtilsTests(unittest.TestCase):
         ]
         unique = deduplicate_articles(articles)
         self.assertEqual(len(unique), 2)
+
+    def test_relevance_filter_drops_generic_politics(self) -> None:
+        article = {
+            "title": "Senator announces campaign finance bill",
+            "summary": "The president and lawmakers debated election strategy in Washington.",
+            "category": "Politics",
+            "source": "Generic News",
+        }
+        self.assertFalse(is_relevant_article(article))
+
+    def test_relevance_filter_drops_generic_politics_even_in_tech_category(self) -> None:
+        article = {
+            "title": "President signs campaign finance bill",
+            "summary": "Lawmakers debated election strategy in Washington.",
+            "category": "Tech",
+            "source": "Tech Feed",
+        }
+        self.assertFalse(is_relevant_article(article))
+
+    def test_relevance_filter_keeps_ai_policy(self) -> None:
+        article = {
+            "title": "White House releases AI chip export controls",
+            "summary": "New rules affect Nvidia GPUs and cloud compute providers.",
+            "category": "Politics",
+            "source": "Policy Wire",
+        }
+        self.assertTrue(is_relevant_article(article))
+
+    def test_relevance_filter_keeps_tech_job_market(self) -> None:
+        article = {
+            "title": "Software engineering hiring rebounds at startups",
+            "summary": "Developer jobs and recruiting are improving after layoffs.",
+            "category": "Tech Jobs",
+            "source": "Jobs Feed",
+        }
+        self.assertTrue(is_relevant_article(article))
+
+    def test_filter_relevant_articles(self) -> None:
+        articles = [
+            {"title": "Election polling update", "summary": "Campaign news", "category": "Politics"},
+            {"title": "OpenAI launches new model", "summary": "LLM release", "category": "Tech"},
+        ]
+        self.assertEqual(len(filter_relevant_articles(articles)), 1)
 
 
 if __name__ == "__main__":

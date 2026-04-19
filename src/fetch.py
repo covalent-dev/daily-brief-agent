@@ -13,6 +13,7 @@ from utils import (
     calculate_article_hash,
     clean_summary_text,
     deduplicate_articles,
+    filter_relevant_articles,
     filter_recent_articles,
     parse_date,
 )
@@ -165,6 +166,10 @@ def fetch_all_articles_with_meta(config: Dict, cache_file: Path, use_cache: bool
                     cached_articles = filter_recent_articles(cache['articles'], int(config['settings'].get('filter_hours', 48)))
                     if len(cached_articles) != len(cache['articles']):
                         logger.info("⚠️  Dropped %d stale cached items after recency filter", len(cache['articles']) - len(cached_articles))
+                    before_relevance = len(cached_articles)
+                    cached_articles = filter_relevant_articles(cached_articles)
+                    if len(cached_articles) != before_relevance:
+                        logger.info("🧹 Dropped %d cached non-tech/political articles", before_relevance - len(cached_articles))
                     return cached_articles, meta
                 logger.info("⚠️  Cache is fresh but empty; refetching feeds")
 
@@ -176,6 +181,10 @@ def fetch_all_articles_with_meta(config: Dict, cache_file: Path, use_cache: bool
             logger.info("⚠️  Using cached articles despite stale timestamp")
             meta["cache_used"] = True
             cached_articles = filter_recent_articles(cache['articles'], int(config['settings'].get('filter_hours', 48)))
+            before_relevance = len(cached_articles)
+            cached_articles = filter_relevant_articles(cached_articles)
+            if len(cached_articles) != before_relevance:
+                logger.info("🧹 Dropped %d cached non-tech/political articles", before_relevance - len(cached_articles))
             return cached_articles, meta
         meta["status"] = "network_unavailable"
         return [], meta
@@ -203,6 +212,13 @@ def fetch_all_articles_with_meta(config: Dict, cache_file: Path, use_cache: bool
     filter_hours = config['settings'].get('filter_hours', 48)
     all_articles = filter_recent_articles(all_articles, filter_hours)
     logger.info(f"📰 Recent articles: {len(all_articles)}\n")
+
+    before_relevance = len(all_articles)
+    all_articles = filter_relevant_articles(all_articles)
+    dropped_relevance = before_relevance - len(all_articles)
+    if dropped_relevance:
+        logger.info(f"🧹 Dropped {dropped_relevance} non-tech/political articles")
+    logger.info(f"📰 Relevant articles: {len(all_articles)}\n")
 
     save_cache(cache_file, all_articles)
 
